@@ -1,0 +1,128 @@
+class Client {
+  //Déclaration des paramètres de base du client
+  private String ipv4;
+  private int portClasse;
+  private PrintWriter printer; 
+  private Socket clientSocket;
+  private BufferedReader reader;
+
+  public Client ( String nouvIpv4, int nouvPort) { //nouveau constructeur avec pour paramètres l'ip et le port
+    ipv4 = nouvIpv4;     // affectation des nouveaux ip et port à l'objet
+    portClasse = nouvPort;
+    println(portClasse + " " + ipv4);
+  }
+  public void end() throws IOException {   //méthode de cloture de la communication, les exceptions sont ignorées car si cette méthode est invoquée, le socket a réussi à être créé
+    reader.close();                       //fermeture du socket, du flux d'entrée et de sortie
+    printer.close();
+    clientSocket.close();
+  }
+
+  void communication() {               //méthode établissant la communication client/serveur
+    final Socket clientSocket;         //création d'un socket pour une communication en TCP
+    final BufferedReader reader;      // création d'un bufferedreader pour lire le flux entrant
+    final PrintWriter printer;        //création d'un printwriter pour écrire dans le flux sortant
+    //les variables sont ici déclarées "final" car une fois déclarées leur valeurs ne changeront pas
+
+    try {
+
+      clientSocket = new Socket(ipv4, portClasse);  // déclaration du socket clientSocket avec pour paramètres l'ip et le port de l'objet
+      println("connexion réussie !");
+      //pour envoyer
+      printer = new PrintWriter(clientSocket.getOutputStream()); // création du printWriter printer pour écrire dans le flux sortant avec pour paramètres
+      //le flux sortant du socket récupéré grâce à getOutputStream()
+
+      reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));  // réception du flux entrant du socket en byte avec getInputStream()
+      //amélioration de la lecture avec une nouvelle instance de la classe InputStreamReader
+      //pour obtenir une chaîne de caractère puis création d'une instance reader de bufferedreader
+      //afin "d'améliorer" la lecture du flux entrant d'inputstreamreader en lisant ligne par ligne
+
+      Thread envoyer = new Thread(new RunEnvoi(printer));      //creation d'un nouveau thread envoyer qui gérera l'envoi
+      //avec pour paramètre la classe RunEnvoi implémentée par Runnable qui contient 
+      //les instructions à executer par le thread
+
+      envoyer.start();                             //Début du thread envoyer
+
+      Thread recevoir = new Thread(new RunLecture(reader));  //creation d'un nouveau thread recevoir qui gérera la reception
+      //avec pour paramètre la classe RunLecture implémentée par Runnable qui contient 
+      //les instructions à executer par le thread
+
+      recevoir.start();                           //Début du thread lecture
+    }
+    catch(IOException e) {              //catch pour détecter les erreurs qui peuvent survenir
+      System.out.println("Io exception !");
+    }
+    catch(NullPointerException e) {
+      System.out.println("Pas de pointeur !");
+    }
+  }
+
+
+  void connexion() {                              // méthode destinée à initialiser la connexion avec  le serveur pouvant être utilisée pour tester la connexion serveur/client
+
+    try {
+      Socket socketduclient = new Socket(ipv4, port);
+      println("connexion réussie !");
+      socketduclient.close();
+    }
+    catch(IOException e) {
+      e.printStackTrace();
+      println("erreur");
+    }
+  }
+}
+//Runnable du thread de lecture
+public class RunLecture implements Runnable { // implémentation de l'interface Runnable
+  BufferedReader reader;                      //création d'un lecteur local
+  String msg;                                  //création d'une variable locale de stockage du msg reçu
+
+
+  RunLecture(BufferedReader nouvreader) {      //création d'un nouveau constructeur de classe avec pour paramètre un bufferedReader
+    reader = nouvreader;                        // affectation du nouveau bufferedreader à l'objet
+  }
+
+  public void run() {                         // redéclaration de la méthode run() de l'interface Runnable, liste des instructions à executer par le thread
+    try {                              // bloc try/catch pour anticiper les erreurs de connexion
+      msg = reader.readLine();        // la variable locale string msg prend la valeur du flux  reçu en sortie par le socket et converti en string
+      //par le reader
+
+      while (msg != null) {           // tant que le serveur et connecté :
+        delay(10);                    // delay() pour laisser le temps au système d'executer les instructions pour un message avant d'en recevoir un autre
+        messageRecu = msg;             //affectation de la valeur de la variable locale msg à la variable globale messageRecu pour permettre de l'afficher
+        afficherMessage = true;                //affichage du message sur l'ihm
+        System.out.println("Serveur : "+msg);      // affichage du message sur la console
+        msg = reader.readLine();                   // la variable locale string msg prend la valeur du string reçu en sortie par reader
+      }  
+
+      System.out.println("Serveur déconecté");          //le serveur se déconnecte
+      thisClient.end();                                 // fermeture propre du socket et des flux entree/sortie
+    } 
+    catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+}
+
+
+
+
+
+//Runnable du thread d'envoi
+public class RunEnvoi implements Runnable {  // implémentation de l'interface Runnable
+  private PrintWriter printer;                          //création d'un printwriter local
+  String msg;                                  //création d'une variable locale d'envoi du message saisi
+
+  RunEnvoi(PrintWriter nouvPrinter) {     //création d'un nouveau constructeur de classe avec pour paramètre un printwriter
+    printer = nouvPrinter;               // affectation du nouveau printwriter à l'objet
+  }
+  public void run() {                    // redéclaration de la méthode run() de l'interface Runnable, liste des instructions à executer par le thread
+    while (true) {                  //boucle infinie, break lorsque le socket se ferme
+      delay(10);                     //delay() pour laisser le temps au systeme de traiter les instructions
+      if (autorisation==true) {        // si l'utilisateur donne l'autorisation d'evoyer un message :
+        msg = message;                    // la variable locale msg prend la valeur de la variable globale message qui contient le message à envoyer
+        printer.println(msg);             //Ecriture du message dans le flux de sortie du socket par le printwriter
+        printer.flush();                    // Le tampon d'ecriture est vidé, permet de réécrire dans le flux de sortie du socket
+        autorisation = false;                //autorisation = false, il n'y a plus de message à envoyer
+      }
+    }
+  }
+}
