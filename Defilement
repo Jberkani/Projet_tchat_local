@@ -1,0 +1,56 @@
+void DefilementMessages(String msg, boolean emetteur) {    //Nouvelle fonction defilementmessages qui affiche les messages sur l'ihm avec un effet de defilement
+  //avec pour paramètres le msg à afficher et un boolean qui permet de savoir si nous sommes à la source
+  //du message ou non
+
+  if (emetteur == true) {                                    //Si on a envoyé le message : 
+    messages.add('+' + msg);                                //ajout du message à la liste dynamique avec un '+' devant
+  } else {                                                  //Sinon :
+    messages.add('-' + msg);                                //ajout du message à la liste dynamique avec un '-' devant
+  }
+
+
+  if (nbreMessages<14) {                                 //Si il y a moins de 14 messages à afficher (limite de messages pouvant être affichés dans le rectangle prévu à cet effet)
+    if (emetteur == true) {                                //Si on a envoyé le message
+      fill(255, 15, 15);                                          //le message sera affiché en rouge
+      text(id + " : " + (messages.get(nbreMessages)).substring(1), 15, defilY);      //On affiche le message tapé par l'utilisateur sans le '+' aves son id aux coordonées  (15,defilY)
+
+    } else {
+      fill(0, 0, 255);                                                //le message sera affiché en bleu
+      text(id2 + " : "+ (messages.get(nbreMessages)).substring(1), 15, defilY);//On affiche le message tapé par l'utilisateur sans le '-' aves son id aux coordonées (15,defilY)
+    }
+    defilY = defilY +20;                                          //defilY augmente pour que les prochains messages s'affichent en dessous des autres
+    nbreMessages ++;                                             //On indique qu'un message de plus à été affiché
+    println(messages);
+  } else {                             //Si il y a plus de 14 messages à afficher :
+
+    displayedMessages.clear();        // La liste qui contient les messages à afficher est vidée
+
+    println("taille : "+messages.size());
+    for (int i = (messages.size()-14); i<=messages.size()-1; i++) {       //On ajoute les 14 derniers messages tapés par l'utilisateur dans la liste des messages à afficher
+      displayedMessages.add(messages.get(i));
+    }   
+
+    fill(87, 87, 87);
+    rect(10, 180, MSPACE_X, MSPACE_Y, 3, 6, 12, 18);     //On dessine un rectangle gris par dessus les messages affichés précédemment pour tous les effacer
+    nbreMessages ++;                                      //On indique qu'un message de plus va être affiché
+
+    for (int i = 0; i < 14; i++) {                                           //On crée une boucle pour afficher les 14 derniers messages tapés par l'utilisateur
+      char[] decompositionMessage = (displayedMessages.get(i)).toCharArray(); // On décompose le message à afficher en une liste de caractères pour pouvoir détecter le '+' ou le
+      // '-' placés devant le message et qui permettent de savoir qui a envoyé le message
+
+      if (decompositionMessage[0] == '+') {                                    //Si nous étions l'emetteur du message :
+        fill(255, 15, 15);                                                          //message affiché en rouge
+        text(id + " : " + (displayedMessages.get(i)).substring(1), 15, 200+(i*20));       //On écrit le message en premier ou à la suite des autres selon son index, l'ordre
+        // dans lequel les messages ont été envoyés avec l'id correspondant
+      } else if (decompositionMessage[0] == '-') {                               //Si nous étions le destinataire de ce message   :                         
+
+        fill(0, 0, 255);                                              //message affiché en rouge
+
+        text(id2 + " : "+ (displayedMessages.get(i)).substring(1), 15, 200+(i*20));//On écrit le message en premier ou à la suite des autres selon son index, l'ordre
+        // dans lequel les messages ont été envoyés avec l'id correspondant
+      }
+    }
+
+    System.out.println("Messages affichÃ©s : " + displayedMessages);   // affichage dans la console des messages affichés sur l'ihm
+  }
+}
