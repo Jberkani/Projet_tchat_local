@@ -1,0 +1,110 @@
+public class Server {
+  //Déclaration des paramètres de base du server
+  private String ipv4;
+  private int portClasse;
+  ServerSocket serversocket;
+  Socket soc;
+
+  void communication() {
+    final Socket soc;
+    final ServerSocket serversocket;
+    final BufferedReader reader;
+    final PrintWriter printer;
+
+    try {
+      serversocket = new ServerSocket(port);
+      soc = serversocket.accept();
+
+      //pour envoyer
+      printer = new PrintWriter(soc.getOutputStream());
+      // pour recevoir
+      reader = new BufferedReader(new InputStreamReader(soc.getInputStream()));
+
+      Thread envoyer = new Thread(new Runnable() {
+        String msg;
+        @Override
+          public void run() {
+          while (true) { 
+            if (autorisation == true) {
+              msg = message;
+              printer.println(msg);
+              printer.flush();
+              autorisation = false;
+            }
+          }
+        }
+      }
+      );
+      envoyer.start();
+      Thread recevoir = new Thread(new Runnable() {
+        String msg;
+        @Override
+          public void run() {
+          try {
+            msg = reader.readLine();
+            // System.out.println("Client : "+msg);
+
+            while (msg!=null) {
+              messageRecu = msg;
+              affichage = true;
+
+              msg = reader.readLine();
+
+              System.out.println("Client : "+msg);
+            }
+
+
+            System.out.println("Client déconecté");
+            printer.close();
+            soc.close();
+            serversocket.close();
+          } 
+          catch (IOException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+      );
+      recevoir.start();
+    }
+    catch(NullPointerException e) {
+      System.out.println("Pas de pointeur !");
+    }
+    catch(IOException e) {
+      System.out.println("Io exception !");
+    }
+  }
+
+
+  //Constructeur
+  Server ( int nouvPort) {
+    port = nouvPort;
+    try {
+      ServerSocket socketserver = new ServerSocket(port);
+
+      println("ça marche ?");
+      println("ipv4 : " + ipv4);
+      socketserver.close();
+    }
+
+    catch(IOException e) {
+      e.printStackTrace();
+      println("erreur2");
+    }
+  }
+  void acceptConnexion() {
+    try {
+      ServerSocket socketserver = new ServerSocket(port);
+      Socket soc = socketserver.accept();
+
+      println("connexion réussie !");
+      socketserver.close();
+      soc.close();
+      println("ipv4 : " + ipv4);
+    }
+    catch(IOException e) {
+      e.printStackTrace();
+      println("erreur2");
+    }
+  }
+}
