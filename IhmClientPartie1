@@ -1,0 +1,112 @@
+import java.net.InetAddress;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import controlP5.*;
+import java.net.UnknownHostException;
+
+
+
+String messageRecu = "";
+boolean autorisation = false, afficherMessage = false;
+final static private int MSPACE_X = 480, MSPACE_Y = 300;
+byte nbreMessages = 0;
+int defilY = 200, port = 8080;
+ArrayList<String> messages = new ArrayList<String>(); //Déclaration d'une nouvelle liste dynamique qui contiendra tous les messages et permettra d'identifer l'auteur d'un message
+ArrayList<String> displayedMessages = new ArrayList<String>(); //Déclaration d'une nouvelle liste dynamique qui contiendra tous les messages affichés sur l'ihm
+
+String ip = "192.168.1.70", message = "";
+
+ControlP5 cp5;
+
+Client thisClient = new Client(ip, port); // Création d'une instance thisClient de la classe Client avec pour paramètres l'ip et le port
+
+void setup() {
+  size(500, 560);//taille de l'ihm
+  noStroke();
+  cp5 = new ControlP5(this); //Création d'une instance cp5 de la classe cp5 avec pour paramètre l'instance cp5 elle-même
+
+
+  ControlFont cf1 = new ControlFont(createFont("Arial", 20)); // cf1 instance de la classe ControlFont
+  ControlFont cf2 = new ControlFont(createFont("Ebrima", 15)); // cf2 instance de la classe ControlFont
+
+
+  cp5.addButton("VALIDER")   //déclaration boutons 
+    .setPosition(360, 120)
+    .setSize(80, 30)
+    ;
+
+  cp5.addButton("CONNEXION") 
+    .setPosition(350, 25)
+    .setSize(100, 30)
+    ;
+  cp5.addTextfield("IP") // déclaration champs textes
+    .setValue(0)
+    .setPosition(35, 25)
+    .setSize(130, 30)
+    .setFont(cf2)
+    ;
+  cp5.addTextfield("PORT")
+    .setValue(0)
+    .setPosition(245, 25)
+    .setSize(40, 30)
+    .setFont(cf2)
+    ;
+
+  cp5.addTextfield("ID")
+    .setValue(0)
+    .setPosition(250, 120)
+    .setSize(40, 30)
+    .setFont(cf1)
+    ;
+  cp5.addTextfield("ENTREE")
+    .setPosition(10, 490)
+    .setSize(400, 30)
+    .setFont(cf1)
+    .setColorBackground(0x26262626)   //modification des couleurs en héxadécimal au premier, deuxieme plan et de la police du champ texte
+    .setColorForeground(0xffffffff)
+    .setValue(0)
+    ;
+
+  ;
+  cp5.addButton("ENVOYER")
+    .setPosition(430, 490)
+    .setSize(50, 30)
+    ;
+  PImage[] imgs = {loadImage("green.png"), loadImage("red.png")}; // chargement des images
+  background(#808080);  //couleur de fond
+  image(imgs[1], 130, 80, 30, 30); //affichage de l'image et des textes
+  textSize(17); // taille de base du texte définie à 17
+  text("Client status :", 10, 100);
+  text("IP", 10, 50);
+  text("PORT", 190, 50);
+  text("Reception :", 10, 140);
+  text("Identifiant(PN)", 120, 140);
+  fill(87, 87, 87); // change la couleur de l'element en dessous en gris foncé
+  rect(10, 180, MSPACE_X, MSPACE_Y, 3, 6, 12, 18); // création d'un rectangle avec des bords arrondis
+}
+public void controlEvent(ControlEvent theEvent) {  //détection d'un clic de la souris
+  if (theEvent.isFrom(cp5.getController("CONNEXION"))) { //Si le bouton connexion est cliqué
+    thisClient.communication(); // début de la communication serveur/client
+  }else if(theEvent.isFrom(cp5.getController("ENVOYER"))){ //Si le bouton Envoyer est cliqué
+    message = cp5.get(Textfield.class, "ENTREE").getText(); //Envoi du message : récuperation du contenu du champ texte dans la variable message
+    DefilementMessages(message,true);                       //Affichage du message tapé sur l'ihm avec l'identifiant de l'utilisateur correspondant
+    cp5.get(Textfield.class, "ENTREE").setText("");         // Le champ texte est vidé
+    autorisation = true;                                    // tranfert du message au serveur grâce au thread d'envoi qui s'execute en parallele avec autorisation = true
+    
+  }
+}
+void draw() {
+  if (afficherMessage  == true) {                        // si un message vient d'être reçu
+    DefilementMessages(messageRecu, false);        //Affichage du message sur l'ihm et de l'identifiant de l'emetteur
+    afficherMessage = false;                             
+  }
+}
+
+
+public void ENTREE(String msg) {                 // lorsque l'utilisateur appuie sur entree alors qu'il tapait sur le champ texte ENTREE :
+  DefilementMessages(msg, true);                //Affichage du message tapé sur l'ihm avec l'identifiant de l'utilisateur correspondant
+  autorisation = true;                          // tranfert du message au serveur grâce au thread envoi qui s'execute en parallele avec autorisation = true           
+  message = msg ;                               //Stockage du message dans une variable globale pour être utilisé dans le thread d'envoi
+
+}
