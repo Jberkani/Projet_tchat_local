@@ -1,0 +1,100 @@
+import java.net.InetAddress;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import controlP5.*;
+import java.net.UnknownHostException;
+
+ArrayList<String> messages = new ArrayList<String>();
+ArrayList<String> displayedMessages = new ArrayList<String>();
+boolean debut = false;
+final int MSPACE_X = 480;
+final int MSPACE_Y = 300;
+byte nbreMessages = 0;
+int defilY = 200;
+String ip = "192.168.1.70", 
+  id = "LC", 
+  id2 = "JT";
+String message = "", messageRecu = "";
+boolean autorisation = false, affichage = false;
+
+int port = 8080;
+
+InetAddress ServeurAdresse;
+ControlP5 cp5;
+void  setup() {
+  size(500, 540);
+  noStroke();
+  cp5 = new ControlP5(this);
+
+
+  ControlFont cf1 = new ControlFont(createFont("Arial", 20));
+
+
+  cp5.addButton("valider")
+    .setValue(0)
+    .setPosition(360, 120)
+    .setSize(80, 30)
+    ;
+
+  cp5.addTextfield("ID")
+    .setValue(0)
+    .setPosition(250, 120)
+    .setSize(40, 30)
+    ;
+
+  cp5.addTextfield("ENTREE")
+    .setPosition(10, 490)
+    .setSize(400, 30)
+    .setColorBackground(0x26262626)
+    .setColorForeground(0xffffffff)
+    .setFont(cf1);
+  ;
+  cp5.addButton("Connexion")
+    .setPosition(400, 50)
+    .setSize(50, 30)
+    ;
+  cp5.addButton("ENVOYER")
+    .setPosition(430, 490)
+    .setSize(50, 30)
+    ;
+  //PImage[] imgs = {loadImage("green.png"), loadImage("red.png")};
+  background(#808080);
+  textSize(17);
+  text("IP : "+ip, 10, 50);
+  text("PORT : "+port, 200, 50);
+  text("Reception :", 10, 140);
+  text("Identifiant(PN)", 120, 140);
+  fill(255, 255, 255);
+  fill(87, 87, 87);
+  rect(10, 180, MSPACE_X, MSPACE_Y, 3, 6, 12, 18);
+}
+Server myServer = new Server(port);
+
+public void controlEvent(ControlEvent theEvent) {
+  String msg = "";
+  if (theEvent.isFrom(cp5.getController("Connexion"))) {
+    debut = true;
+    // myServer.acceptConnexion();
+    myServer.communication();
+  } else if (theEvent.isFrom(cp5.getController("ENVOYER"))) {
+    autorisation = true;
+    msg = cp5.get(Textfield.class, "ENTREE").getText();
+    DefilementMessages(msg, true);
+    cp5.get(Textfield.class, "ENTREE").setText("");
+  }
+}
+void draw() {
+  if (affichage == true) {
+    DefilementMessages(messageRecu, false);
+    affichage = false;
+  }
+}
+
+
+public void ENTREE(String msg) {
+  DefilementMessages(msg, true);
+  autorisation = true;
+  println(msg);
+  message = msg;
+}
